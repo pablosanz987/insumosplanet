@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Insumos Planet Fitness Villaverde</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rockwell+Nova:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rockwell Nova', sans-serif;
+            background: linear-gradient(to bottom, #8e2de2, #4a00e0);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            max-width: 200px;
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .lista-prestados {
+            list-style: none;
+            padding: 0;
+            max-width: 400px;
+            margin: 0 auto 10px;
+        }
+
+        .lista-prestados li {
+            background-color: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #ffeb3b;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #8e2de2;
+            color: white;
+            padding: 10px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #6a1b9a;
+        }
+
+        #disponibles-grilletes, #disponibles-cojines, #disponibles-cinturones {
+            color: #00ff99;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        .carousel-slide {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .carousel-image {
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: white;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .prev { left: 0; }
+        .next { right: 0; }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="logo1.jpg" alt="Logo Planet Fitness" class="logo">
+    </div>
+
+    <div class="carousel-container">
+        <button class="carousel-button prev" onclick="moveSlide(-1)">❮</button>
+        <div class="carousel-slide" id="carouselSlide">
+            <img src="imagen 1.jpeg" class="carousel-image">
+            <img src="imagen 2.jpeg" class="carousel-image">
+            <img src="imagen 3.jpeg" class="carousel-image">
+            <img src="imagen 4.jpeg" class="carousel-image">
+            <img src="imagen 5.jpeg" class="carousel-image">
+            <img src="imagen 6.jpeg" class="carousel-image">
+        </div>
+        <button class="carousel-button next" onclick="moveSlide(1)">❯</button>
+    </div>
+
+    <!-- Secciones -->
+    <div id="secciones"></div>
+
+    <button onclick="resetearTodo()">🔄 Reiniciar Registros</button>
+
+    <script>
+        const insumos = {
+            grilletes: { total: 5, prestados: [], nombre: 'Grilletes' },
+            cojines: { total: 6, prestados: [], nombre: 'Cojines' },
+            cinturones: { total: 4, prestados: [], nombre: 'Cinturones' }
+        };
+
+        function crearSeccion(nombreId) {
+            const contenedor = document.createElement("div");
+            contenedor.classList.add("container");
+
+            contenedor.innerHTML = `
+                <h1>${insumos[nombreId].nombre} Planet Fitness Villaverde</h1>
+                <h2>Disponibilidad: <span id="disponibles-${nombreId}"></span></h2>
+                <h3>En préstamo actualmente:</h3>
+                <ul id="prestados-${nombreId}" class="lista-prestados"></ul>
+                <button onclick="prestar('${nombreId}')">Tomar ${insumos[nombreId].nombre.slice(0, -1)}</button>
+                <button onclick="devolver('${nombreId}')">Devolver ${insumos[nombreId].nombre.slice(0, -1)}</button>
+            `;
+
+            document.getElementById("secciones").appendChild(contenedor);
+        }
+
+        function actualizarLista(nombreId) {
+            const ul = document.getElementById(`prestados-${nombreId}`);
+            const span = document.getElementById(`disponibles-${nombreId}`);
+            const data = insumos[nombreId];
+
+            ul.innerHTML = '';
+            data.prestados.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.hora}${item.socio ? ' - Socio: ' + item.socio : ''}`;
+                ul.appendChild(li);
+            });
+
+            span.textContent = data.total - data.prestados.length;
+        }
+
+        function prestar(nombreId) {
+            const data = insumos[nombreId];
+            if (data.prestados.length >= data.total) {
+                alert(`No hay ${data.nombre.toLowerCase()} disponibles.`);
+                return;
+            }
+
+            const socio = prompt("Ingrese su número de socio o celular:");
+            const hora = new Date().toLocaleTimeString();
+            data.prestados.push({ hora, socio });
+            guardarDatos();
+            actualizarLista(nombreId);
+            alert(`${data.nombre.slice(0, -1)} tomado.`);
+        }
+
+        function devolver(nombreId) {
+            const data = insumos[nombreId];
+            if (data.prestados.length === 0) {
+                alert(`No hay ${data.nombre.toLowerCase()} prestados.`);
+                return;
+            }
+
+            const socioIngresado = prompt("Ingrese su número de socio o celular para confirmar:");
+            const index = data.prestados.findIndex(item => item.socio === socioIngresado);
+            if (index !== -1) {
+                data.prestados.splice(index, 1);
+                guardarDatos();
+                actualizarLista(nombreId);
+                alert(`${data.nombre.slice(0, -1)} devuelto.`);
+            } else {
+                alert("No se encontró un préstamo con ese número.");
+            }
+        }
+
+        function guardarDatos() {
+            localStorage.setItem("datosInsumos", JSON.stringify(insumos));
+        }
+
+        function cargarDatos() {
+            const data = localStorage.getItem("datosInsumos");
+            if (data) {
+                const parsed = JSON.parse(data);
+                Object.keys(insumos).forEach(k => {
+                    insumos[k].prestados = parsed[k].prestados;
+                });
+            }
+        }
+
+        function resetearTodo() {
+            const clave = prompt("Ingresa la clave de seguridad para reiniciar:");
+            if (clave !== "villaverde123") return alert("Clave incorrecta.");
+            if (confirm("¿Seguro que deseas reiniciar todos los registros?")) {
+                Object.keys(insumos).forEach(k => insumos[k].prestados = []);
+                guardarDatos();
+                Object.keys(insumos).forEach(actualizarLista);
+                alert("Registros reiniciados.");
+            }
+        }
+
+        // Carrusel con flechas
+        let currentSlide = 0;
+        const slides = document.querySelectorAll(".carousel-image");
+        const slideContainer = document.getElementById("carouselSlide");
+
+        function moveSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            slideContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        // Inicializar
+        ["grilletes", "cojines", "cinturones"].forEach(crearSeccion);
+        cargarDatos();
+        ["grilletes", "cojines", "cinturones"].forEach(actualizarLista);
+    </script>
+</body>
+</html>
