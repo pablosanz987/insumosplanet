@@ -71,12 +71,6 @@
             background-color: #6a1b9a;
         }
 
-        #disponibles-grilletes, #disponibles-cojines, #disponibles-cinturones {
-            color: #00ff99;
-            font-weight: bold;
-            font-size: 1.3em;
-        }
-
         .carousel-container {
             position: relative;
             width: 90%;
@@ -131,22 +125,21 @@
         <button class="carousel-button next" onclick="moveSlide(1)">❯</button>
     </div>
 
-    <!-- Secciones -->
     <div id="secciones"></div>
-
     <button onclick="resetearTodo()">🔄 Reiniciar Registros</button>
+    <button onclick="eliminarRegistroStaff()">🗑 Eliminar Registro Manualmente</button>
 
     <script>
         const insumos = {
             grilletes: { total: 5, prestados: [], nombre: 'Grilletes' },
-            cojines: { total: 6, prestados: [], nombre: 'Cojines' },
-            cinturones: { total: 4, prestados: [], nombre: 'Cinturones' }
+            cojines: { total: 5, prestados: [], nombre: 'Cojines' },
+            cinturones: { total: 2, prestados: [], nombre: 'Cinturones' },
+            audifonos: { total: 1, prestados: [], nombre: 'Audífonos' }
         };
 
         function crearSeccion(nombreId) {
             const contenedor = document.createElement("div");
             contenedor.classList.add("container");
-
             contenedor.innerHTML = `
                 <h1>${insumos[nombreId].nombre} Planet Fitness Villaverde</h1>
                 <h2>Disponibilidad: <span id="disponibles-${nombreId}"></span></h2>
@@ -155,7 +148,6 @@
                 <button onclick="prestar('${nombreId}')">Tomar ${insumos[nombreId].nombre.slice(0, -1)}</button>
                 <button onclick="devolver('${nombreId}')">Devolver ${insumos[nombreId].nombre.slice(0, -1)}</button>
             `;
-
             document.getElementById("secciones").appendChild(contenedor);
         }
 
@@ -181,12 +173,18 @@
                 return;
             }
 
-            const socio = prompt("Ingrese su número de socio o celular:");
+            let socio = prompt("Ingrese su número de socio o celular:", "").replace(/[^0-9]/g, "");
+            while (!socio) {
+                alert("Por favor, ingrese un número de socio o celular válido.");
+                socio = prompt("Ingrese su número de socio o celular:", "").replace(/[^0-9]/g, "");
+                if (socio === null) return; // El usuario canceló
+            }
+
             const hora = new Date().toLocaleTimeString();
             data.prestados.push({ hora, socio });
             guardarDatos();
             actualizarLista(nombreId);
-            alert(`${data.nombre.slice(0, -1)} tomado.`);
+            alert(`${data.nombre.slice(0, -1)} tomado con el número: ${socio}.`);
         }
 
         function devolver(nombreId) {
@@ -196,7 +194,12 @@
                 return;
             }
 
-            const socioIngresado = prompt("Ingrese su número de socio o celular para confirmar:");
+            const socioIngresado = prompt("Ingrese su número de socio o celular para confirmar la devolución:", "").replace(/[^0-9]/g, "");
+            if (!socioIngresado) {
+                alert("Por favor, ingrese su número de socio o celular.");
+                return;
+            }
+
             const index = data.prestados.findIndex(item => item.socio === socioIngresado);
             if (index !== -1) {
                 data.prestados.splice(index, 1);
@@ -204,7 +207,31 @@
                 actualizarLista(nombreId);
                 alert(`${data.nombre.slice(0, -1)} devuelto.`);
             } else {
-                alert("No se encontró un préstamo con ese número.");
+                alert("No se encontró un préstamo asociado a ese número.");
+            }
+        }
+
+        function eliminarRegistroStaff() {
+            const usuario = prompt("Usuario staff:");
+            const contrasena = prompt("Contraseña:");
+            if (usuario !== "staff" || contrasena !== "villaverde123") {
+                alert("Credenciales incorrectas.");
+                return;
+            }
+
+            const tipo = prompt("¿De qué tipo quieres eliminar el registro? (grilletes/cojines/cinturones/audifonos)");
+            const id = tipo.toLowerCase();
+            if (!insumos[id]) return alert("Tipo no válido.");
+
+            const socio = prompt("Número de socio a eliminar:").replace(/[^0-9]/g, "");
+            const index = insumos[id].prestados.findIndex(item => item.socio === socio);
+            if (index !== -1) {
+                insumos[id].prestados.splice(index, 1);
+                guardarDatos();
+                actualizarLista(id);
+                alert("Registro eliminado.");
+            } else {
+                alert("No se encontró ese socio en los préstamos.");
             }
         }
 
@@ -217,7 +244,7 @@
             if (data) {
                 const parsed = JSON.parse(data);
                 Object.keys(insumos).forEach(k => {
-                    insumos[k].prestados = parsed[k].prestados;
+                    if (parsed[k]) insumos[k].prestados = parsed[k].prestados;
                 });
             }
         }
@@ -233,7 +260,6 @@
             }
         }
 
-        // Carrusel con flechas
         let currentSlide = 0;
         const slides = document.querySelectorAll(".carousel-image");
         const slideContainer = document.getElementById("carouselSlide");
@@ -245,10 +271,24 @@
             slideContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
 
-        // Inicializar
-        ["grilletes", "cojines", "cinturones"].forEach(crearSeccion);
+        let intervalId;
+
+        function startCarousel() {
+            intervalId = setInterval(() => {
+                moveSlide(1);
+            }, 6000);
+        }
+
+        function stopCarousel() {
+            clearInterval(intervalId);
+        }
+
+        ["grilletes", "cojines", "cinturones", "audifonos"].forEach(crearSeccion);
         cargarDatos();
-        ["grilletes", "cojines", "cinturones"].forEach(actualizarLista);
+        ["grilletes", "cojines", "cinturones", "audifonos"].forEach(actualizarLista);
+
+        // Iniciar el carrusel automáticamente al cargar la página
+        startCarousel();
     </script>
 </body>
 </html>
